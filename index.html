@@ -7,92 +7,128 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        body { background-color: #0f172a; color: white; }
-        .glass { background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.1); }
+        body { background-color: #0f172a; color: white; scroll-behavior: smooth; }
+        .glass { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(15px); border: 1px solid rgba(255, 255, 255, 0.1); }
+        .gradient-text { background: linear-gradient(90deg, #3b82f6, #10b981); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
     </style>
 </head>
-<body class="min-h-screen flex items-center justify-center p-4">
+<body class="min-h-screen flex flex-col items-center p-4 md:p-10">
 
-    <div class="w-full max-w-2xl">
-        <div class="text-center mb-8">
-            <h1 class="text-4xl font-black text-blue-500 mb-2">TeraBox <span class="text-white">DL</span></h1>
-            <p class="text-gray-400">আপনার ভিডিও প্লে করুন এবং সরাসরি ডাউনলোড করুন</p>
+    <div class="w-full max-w-3xl">
+        <div class="text-center mb-10">
+            <h1 class="text-5xl font-black mb-3 gradient-text">TeraBox DL</h1>
+            <p class="text-gray-400 text-lg">ফাইল প্লে করুন এবং হাই-স্পিড ডাউনলোড করুন</p>
         </div>
 
-        <div class="glass p-6 rounded-2xl shadow-2xl mb-6">
+        <div class="glass p-8 rounded-3xl shadow-2xl mb-8">
             <div class="flex flex-col gap-4">
-                <input type="text" id="teraUrl" placeholder="TeraBox লিঙ্কটি এখানে পেস্ট করুন..." 
-                    class="w-full bg-gray-900 border border-gray-700 p-4 rounded-xl focus:outline-none focus:border-blue-500 transition-all text-white">
-                <button onclick="startProcessing()" id="mainBtn" 
-                    class="w-full bg-blue-600 hover:bg-blue-700 py-4 rounded-xl font-bold text-lg transition-all flex items-center justify-center">
-                    <i class="fa-solid fa-cloud-arrow-down mr-2"></i> Get Video
+                <div class="relative">
+                    <input type="text" id="teraUrl" placeholder="TeraBox লিঙ্কটি এখানে পেস্ট করুন..." 
+                        class="w-full bg-gray-900 border border-gray-700 p-5 pl-12 rounded-2xl focus:outline-none focus:border-blue-500 transition-all text-white text-lg shadow-inner">
+                    <i class="fa-solid fa-link absolute left-4 top-1/2 -translate-y-1/2 text-gray-500"></i>
+                </div>
+                <button onclick="handleDownload()" id="actionBtn" 
+                    class="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600 py-5 rounded-2xl font-bold text-xl shadow-lg transform active:scale-95 transition-all flex items-center justify-center gap-3">
+                    <i class="fa-solid fa-magic"></i> ফাইলটি খুঁজুন
                 </button>
             </div>
         </div>
 
-        <div id="loader" class="hidden text-center py-6">
-            <div class="inline-block animate-spin rounded-full h-10 w-10 border-t-2 border-blue-500 mb-2"></div>
-            <p class="text-blue-400">সার্ভার থেকে ফাইল খোঁজা হচ্ছে...</p>
+        <div id="loadingStatus" class="hidden text-center py-10">
+            <div class="inline-block animate-spin rounded-full h-14 w-14 border-t-4 border-b-4 border-blue-500 mb-4"></div>
+            <p class="text-blue-400 font-semibold text-lg">আপনার ডেটা প্রসেস হচ্ছে, অনুগ্রহ করে অপেক্ষা করুন...</p>
         </div>
 
-        <div id="resultArea" class="hidden glass rounded-2xl overflow-hidden animate-fade-in">
-            <div class="p-6">
-                <h2 id="vTitle" class="text-lg font-bold mb-4 text-gray-200"></h2>
-                
-                <div class="rounded-xl overflow-hidden bg-black mb-6 border border-gray-700">
-                    <video id="vPlayer" controls class="w-full h-full">
-                        <source id="vSource" src="" type="video/mp4">
-                    </video>
+        <div id="outputArea" class="hidden glass rounded-3xl overflow-hidden p-6 animate-in fade-in duration-500 border border-blue-500/30">
+            <div class="flex items-center gap-3 mb-6">
+                <div class="bg-blue-500 p-3 rounded-xl">
+                    <i class="fa-solid fa-file-video text-2xl"></i>
                 </div>
+                <h2 id="fileName" class="text-xl font-bold text-gray-100 truncate"></h2>
+            </div>
+            
+            <div class="rounded-2xl overflow-hidden bg-black mb-8 aspect-video border border-gray-800 shadow-2xl">
+                <video id="videoPlayer" controls class="w-full h-full">
+                    <source id="videoSource" src="" type="video/mp4">
+                    আপনার ব্রাউজার ভিডিও প্লে সাপোর্ট করে না।
+                </video>
+            </div>
 
-                <a id="dlBtn" href="#" target="_blank" 
-                    class="block w-full bg-green-600 hover:bg-green-700 text-center py-4 rounded-xl font-bold text-lg transition-all">
-                    <i class="fa-solid fa-download mr-2"></i> Direct Download
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <a id="downloadLink" href="#" target="_blank" 
+                    class="bg-emerald-600 hover:bg-emerald-500 text-center py-5 rounded-2xl font-black text-lg shadow-lg transition-all flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-download"></i> সরাসরি ডাউনলোড
                 </a>
+                <button onclick="copyToClipboard()" 
+                    class="bg-gray-800 hover:bg-gray-700 text-center py-5 rounded-2xl font-bold text-lg transition-all flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-copy"></i> লিঙ্ক কপি করুন
+                </button>
             </div>
         </div>
     </div>
 
     <script>
-        async function startProcessing() {
-            const urlValue = document.getElementById('teraUrl').value;
-            const loader = document.getElementById('loader');
-            const resultArea = document.getElementById('resultArea');
-            const btn = document.getElementById('mainBtn');
+        async function handleDownload() {
+            const inputField = document.getElementById('teraUrl');
+            const loader = document.getElementById('loadingStatus');
+            const output = document.getElementById('outputArea');
+            const btn = document.getElementById('actionBtn');
 
-            // আপনার তৈরি করা Cloudflare Worker API লিঙ্ক
-            const API_URL = "https://tdownloadererabox.sammimalex.workers.dev";
+            // আপনার নতুন API লিঙ্কটি এখানে আপডেট করা হয়েছে
+            const API_ENDPOINT = "https://gxterabox.samimtt9.workers.dev";
 
-            if(!urlValue) return alert("লিঙ্ক দিন!");
+            if (!inputField.value.trim()) {
+                alert("দয়া করে একটি বৈধ লিঙ্ক প্রদান করুন!");
+                return;
+            }
 
-            // UI Reset
+            // UI আপডেট
             loader.classList.remove('hidden');
-            resultArea.classList.add('hidden');
+            output.classList.add('hidden');
             btn.disabled = true;
+            btn.style.opacity = "0.7";
 
             try {
-                const response = await fetch(`${API_URL}?url=${encodeURIComponent(urlValue)}`);
+                // API থেকে ডেটা ফেচ করা
+                const response = await fetch(`${API_ENDPOINT}/?url=${encodeURIComponent(inputField.value.trim())}`);
                 const data = await response.json();
 
-                if(data.list && data.list.length > 0) {
-                    const file = data.list[0];
-                    const finalLink = file.download_urls['fast'] || file.download_urls['standard'];
+                if (data && data.list && data.list.length > 0) {
+                    const fileInfo = data.list[0];
+                    const finalUrl = fileInfo.download_urls['fast'] || fileInfo.download_urls['standard'];
 
-                    document.getElementById('vTitle').innerText = file.filename;
-                    document.getElementById('vSource').src = finalLink;
-                    document.getElementById('dlBtn').href = finalLink;
+                    // ডেটা বসানো
+                    document.getElementById('fileName').innerText = fileInfo.filename;
+                    document.getElementById('videoSource').src = finalUrl;
+                    document.getElementById('downloadLink').href = finalUrl;
                     
-                    document.getElementById('vPlayer').load();
-                    resultArea.classList.remove('hidden');
+                    // প্লেয়ার লোড করা
+                    const player = document.getElementById('videoPlayer');
+                    player.load();
+
+                    loader.classList.add('hidden');
+                    output.classList.remove('hidden');
+                    
+                    // রেজাল্ট সেকশনে স্ক্রোল করা
+                    output.scrollIntoView({ behavior: 'smooth' });
                 } else {
-                    alert("কোনো ফাইল পাওয়া যায়নি। লিঙ্কটি ঠিক আছে কি না দেখুন।");
+                    alert("দুঃখিত! এই লিঙ্ক থেকে কোনো ফাইল পাওয়া যায়নি।");
+                    loader.classList.add('hidden');
                 }
-            } catch (err) {
-                alert("সার্ভারে এরর হয়েছে। আপনার Worker কোডটি আবার চেক করুন।");
-            } finally {
+            } catch (error) {
+                console.error("Error:", error);
+                alert("সার্ভার এরর! আপনার Cloudflare Worker-এর কোডটি ঠিকমতো কাজ করছে না।");
                 loader.classList.add('hidden');
+            } finally {
                 btn.disabled = false;
+                btn.style.opacity = "1";
             }
+        }
+
+        function copyToClipboard() {
+            const link = document.getElementById('videoSource').src;
+            navigator.clipboard.writeText(link);
+            alert("ডাউনলোড লিঙ্কটি ক্লিপবোর্ডে কপি করা হয়েছে!");
         }
     </script>
 </body>
