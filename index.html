@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GX Studio Pro | Dual-Way Sync</title>
+    <title>GX Sync Pro | Auto-Clear Mode</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
     
@@ -20,6 +20,7 @@
             background: var(--card);
             backdrop-filter: blur(16px);
             border: 1px solid rgba(255, 255, 255, 0.05);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.4);
         }
         .custom-input, .code-area {
             background: rgba(0, 0, 0, 0.4);
@@ -32,7 +33,7 @@
             box-shadow: 0 0 15px rgba(59, 130, 246, 0.2);
         }
         .list-card { transition: all 0.3s ease; border-left-width: 4px; }
-        .list-card:hover { transform: translateX(8px); background: rgba(255, 255, 255, 0.03); }
+        .list-card:hover { transform: scale(1.02); background: rgba(255, 255, 255, 0.05); }
         ::-webkit-scrollbar { width: 5px; }
         ::-webkit-scrollbar-thumb { background: #374151; border-radius: 10px; }
     </style>
@@ -40,51 +41,63 @@
 <body class="p-4 md:p-10">
 
     <div class="max-w-6xl mx-auto">
-        <header class="mb-10 flex justify-between items-center">
-            <h1 class="text-3xl font-black tracking-tighter italic text-white">GX<span class="text-blue-500">SYNC</span></h1>
-            <span class="text-[10px] bg-blue-500/10 text-blue-400 px-3 py-1 rounded-full border border-blue-500/20 font-bold uppercase tracking-widest">Local Persistence Enabled</span>
+        <header class="mb-10 flex flex-col md:flex-row justify-between items-center gap-4">
+            <div>
+                <h1 class="text-3xl font-black italic text-white uppercase tracking-tighter">GX<span class="text-blue-500 text-4xl">.</span>SYNC</h1>
+                <p class="text-gray-500 text-[10px] uppercase font-bold tracking-[3px]">Database Management System</p>
+            </div>
+            <div class="flex items-center gap-3">
+                <span id="counter" class="bg-blue-600/20 text-blue-400 px-4 py-1 rounded-full text-xs font-bold border border-blue-500/20">0 ITEMS SAVED</span>
+            </div>
         </header>
 
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
             
             <div class="lg:col-span-5 space-y-6">
-                <div class="premium-glass p-6 rounded-[2rem] border border-white/5 shadow-2xl">
-                    <h2 class="text-lg font-bold mb-4 flex items-center gap-2">
-                        <span class="w-2 h-2 bg-blue-500 rounded-full"></span> Add / Edit Item
-                    </h2>
-                    <div class="space-y-3">
-                        <input type="text" id="title" placeholder="Entry Title" class="custom-input w-full p-4 rounded-xl text-sm">
-                        <input type="text" id="link" placeholder="Download Link" class="custom-input w-full p-4 rounded-xl text-sm">
-                        <div class="grid grid-cols-2 gap-3">
-                            <select id="cat" class="custom-input w-full p-4 rounded-xl text-sm">
-                                <option value="file">📁 File</option>
-                                <option value="app">🚀 App</option>
-                            </select>
-                            <input type="color" id="color" value="#3b82f6" class="w-full h-[52px] bg-transparent border-none cursor-pointer">
+                <div class="premium-glass p-8 rounded-[2.5rem]">
+                    <h2 class="text-sm font-black text-gray-400 uppercase tracking-widest mb-6">Create Entry</h2>
+                    <div class="space-y-4">
+                        <div class="space-y-1">
+                            <label class="text-[10px] text-gray-500 ml-2 font-bold uppercase">Content Title</label>
+                            <input type="text" id="title" placeholder="e.g. Prayer Time App" class="custom-input w-full p-4 rounded-2xl text-sm">
                         </div>
+                        <div class="space-y-1">
+                            <label class="text-[10px] text-gray-500 ml-2 font-bold uppercase">Link / URL</label>
+                            <input type="text" id="link" placeholder="https://github.com/..." class="custom-input w-full p-4 rounded-2xl text-sm">
+                        </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="space-y-1">
+                                <label class="text-[10px] text-gray-500 ml-2 font-bold uppercase">Type</label>
+                                <select id="cat" class="custom-input w-full p-4 rounded-2xl text-sm cursor-pointer">
+                                    <option value="file">📁 File</option>
+                                    <option value="app">🚀 App</option>
+                                </select>
+                            </div>
+                            <div class="space-y-1">
+                                <label class="text-[10px] text-gray-500 ml-2 font-bold uppercase">Color Tag</label>
+                                <input type="color" id="color" value="#3b82f6" class="w-full h-[54px] bg-transparent border-none cursor-pointer">
+                            </div>
+                        </div>
+                        
                         <input type="hidden" id="edit-index" value="-1">
-                        <button onclick="saveFromForm()" id="save-btn" class="w-full py-4 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl transition-all shadow-lg shadow-blue-900/20">
-                            Save to List
+                        
+                        <button onclick="handleSave()" id="save-btn" class="w-full mt-4 py-4 bg-white text-black font-black uppercase tracking-widest rounded-2xl hover:bg-blue-600 hover:text-white transition-all duration-300 shadow-lg active:scale-95">
+                            Save & Clear
                         </button>
                     </div>
                 </div>
 
-                <div class="premium-glass p-6 rounded-[2rem] border border-white/5">
-                    <div class="flex justify-between items-center mb-3">
-                        <h2 class="text-xs font-bold text-gray-400 uppercase tracking-widest">JSON Code (Paste to Sync)</h2>
-                        <button onclick="copyCode()" class="text-[10px] hover:text-blue-400 font-bold">COPY CODE</button>
+                <div class="premium-glass p-6 rounded-[2.5rem]">
+                    <div class="flex justify-between items-center mb-4 px-2">
+                        <span class="text-[10px] font-bold text-gray-500 tracking-widest uppercase">Export / Sync Area</span>
+                        <button onclick="copyCode()" id="copy-btn" class="text-[10px] bg-blue-500 text-white px-3 py-1 rounded-lg font-bold">COPY CODE</button>
                     </div>
-                    <textarea id="json-box" class="code-area w-full h-64 p-4 rounded-xl font-mono text-[11px] text-green-400 leading-relaxed" placeholder="Paste your JSON array here..."></textarea>
-                    <p class="text-[10px] text-gray-600 mt-2 text-center italic">Tip: You can paste JSON directly here to update the list.</p>
+                    <textarea id="json-box" class="code-area w-full h-48 p-5 rounded-2xl font-mono text-[11px] text-blue-400 leading-relaxed" placeholder="Data will appear here or paste existing JSON..."></textarea>
                 </div>
             </div>
 
             <div class="lg:col-span-7">
-                <div class="flex justify-between items-center mb-6">
-                    <h2 class="text-2xl font-bold">Managed Assets</h2>
-                    <div id="counter" class="text-[10px] font-bold bg-white/5 px-3 py-1 rounded-lg">0 ITEMS</div>
-                </div>
-                <div id="list-container" class="space-y-4 max-h-[80vh] overflow-y-auto pr-2">
+                <div id="list-container" class="space-y-4 max-h-[85vh] overflow-y-auto pr-2">
                     </div>
             </div>
 
@@ -92,88 +105,111 @@
     </div>
 
     <script>
+        let dataStore = JSON.parse(localStorage.getItem('GX_PRO_DB')) || [];
         const jsonBox = document.getElementById('json-box');
-        const listContainer = document.getElementById('list-container');
-        let dataStore = JSON.parse(localStorage.getItem('GX_PRO_DATA')) || [];
 
-        // 1. Initial Render
-        function init() {
-            renderList(false); // Don't update box on first load to prevent loop
-            jsonBox.value = JSON.stringify(dataStore, null, 2);
-        }
+        // 1. Initial Load
+        window.onload = () => {
+            renderUI(true);
+        };
 
-        // 2. Save From Form
-        function saveFromForm() {
-            const title = document.getElementById('title').value;
-            const link = document.getElementById('link').value;
+        // 2. Main Save Function (With Auto-Clear)
+        function handleSave() {
+            const titleInput = document.getElementById('title');
+            const linkInput = document.getElementById('link');
             const cat = document.getElementById('cat').value;
             const color = document.getElementById('color').value;
             const editIndex = document.getElementById('edit-index').value;
 
-            if (!title || !link) return alert("Please fill Title and Link!");
+            const title = titleInput.value.trim();
+            const link = linkInput.value.trim();
+
+            if (!title || !link) {
+                alert("Please enter both Title and Link!");
+                return;
+            }
 
             const item = { title, link, cat, color };
 
             if (editIndex === "-1") {
+                // New Item
                 dataStore.push(item);
             } else {
+                // Update Existing
                 dataStore[editIndex] = item;
-                resetForm();
+                document.getElementById('edit-index').value = "-1";
+                document.getElementById('save-btn').innerText = "Save & Clear";
+                document.getElementById('save-btn').style.background = "white";
+                document.getElementById('save-btn').style.color = "black";
             }
 
-            updateEverything();
+            // Persistence
+            localStorage.setItem('GX_PRO_DB', JSON.stringify(dataStore));
+
+            // AUTO-CLEAR ACTION: ক্লিয়ার করা হচ্ছে
+            titleInput.value = '';
+            linkInput.value = '';
+            
+            renderUI(true);
         }
 
-        // 3. Update UI & Storage
-        function updateEverything(updateBox = true) {
-            localStorage.setItem('GX_PRO_DATA', JSON.stringify(dataStore));
-            if (updateBox) jsonBox.value = JSON.stringify(dataStore, null, 2);
-            renderList();
-        }
+        // 3. Render List and Code Box
+        function renderUI(updateBox = false) {
+            const listContainer = document.getElementById('list-container');
+            const counter = document.getElementById('counter');
 
-        function renderList() {
             listContainer.innerHTML = '';
-            document.getElementById('counter').innerText = `${dataStore.length} ITEMS`;
+            counter.innerText = `${dataStore.length} ITEMS SAVED`;
+
+            if (dataStore.length === 0) {
+                listContainer.innerHTML = `<div class="p-10 text-center text-gray-600 italic">No data found. Start adding above!</div>`;
+            }
 
             dataStore.forEach((item, index) => {
                 listContainer.innerHTML += `
-                    <div class="list-card premium-glass p-5 rounded-2xl flex items-center justify-between gap-4" style="border-left-color: ${item.color}">
+                    <div class="list-card premium-glass p-6 rounded-[2rem] flex items-center justify-between gap-4 border-l-4" style="border-left-color: ${item.color}">
                         <div class="flex-1 min-w-0">
-                            <span class="text-[9px] font-bold text-blue-400 uppercase">${item.cat}</span>
-                            <h3 class="text-base font-bold text-white truncate">${item.title}</h3>
+                            <span class="text-[9px] font-black uppercase text-blue-500 bg-blue-500/10 px-2 py-0.5 rounded border border-blue-500/10">${item.cat}</span>
+                            <h3 class="text-lg font-bold text-white truncate mt-1">${item.title}</h3>
+                            <p class="text-[10px] text-gray-500 truncate font-mono mt-1">${item.link}</p>
                         </div>
                         <div class="flex gap-2">
-                            <button onclick="editItem(${index})" class="p-2 hover:text-yellow-500 transition-colors">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+                            <button onclick="editItem(${index})" class="p-3 bg-white/5 hover:bg-yellow-500/20 hover:text-yellow-500 rounded-xl transition-all border border-white/5">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" stroke-width="2" stroke-linecap="round"></path></svg>
                             </button>
-                            <button onclick="deleteItem(${index})" class="p-2 hover:text-red-500 transition-colors">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+                            <button onclick="deleteItem(${index})" class="p-3 bg-white/5 hover:bg-red-500/20 hover:text-red-500 rounded-xl transition-all border border-white/5">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" stroke-width="2" stroke-linecap="round"></path></svg>
                             </button>
                         </div>
                     </div>
                 `;
             });
+
+            if (updateBox) {
+                jsonBox.value = JSON.stringify(dataStore, null, 2);
+            }
         }
 
-        // 4. SMART FEATURE: Paste to Sync
+        // 4. SMART SYNC: বক্সে পেস্ট করলে লিস্ট আপডেট হবে
         jsonBox.addEventListener('input', () => {
             try {
-                const pastedData = JSON.parse(jsonBox.value);
-                if (Array.isArray(pastedData)) {
-                    dataStore = pastedData;
-                    localStorage.setItem('GX_PRO_DATA', JSON.stringify(dataStore));
-                    renderList();
+                const pasted = JSON.parse(jsonBox.value);
+                if (Array.isArray(pasted)) {
+                    dataStore = pasted;
+                    localStorage.setItem('GX_PRO_DB', JSON.stringify(dataStore));
+                    renderUI(false); // Box আপডেট করার দরকার নেই যখন ইউজার টাইপ করছে
                 }
             } catch (e) {
-                // Invalid JSON - wait for user to finish typing
+                // Invalid JSON হলে কিছু করার নেই, ইউজার ঠিক করা পর্যন্ত অপেক্ষা করবে
             }
         });
 
-        // Helper Functions
+        // 5. Action Helpers
         function deleteItem(index) {
-            if(confirm("Remove this?")) {
+            if (confirm("Permanently delete this item?")) {
                 dataStore.splice(index, 1);
-                updateEverything();
+                localStorage.setItem('GX_PRO_DB', JSON.stringify(dataStore));
+                renderUI(true);
             }
         }
 
@@ -184,24 +220,22 @@
             document.getElementById('cat').value = item.cat;
             document.getElementById('color').value = item.color;
             document.getElementById('edit-index').value = index;
-            document.getElementById('save-btn').innerText = "Update Item";
+
+            const saveBtn = document.getElementById('save-btn');
+            saveBtn.innerText = "Update Now";
+            saveBtn.style.background = "#eab308";
+            saveBtn.style.color = "black";
+            
             window.scrollTo({top: 0, behavior: 'smooth'});
         }
 
         function copyCode() {
             jsonBox.select();
             document.execCommand('copy');
-            alert("Code Copied!");
+            const copyBtn = document.getElementById('copy-btn');
+            copyBtn.innerText = "COPIED! ✅";
+            setTimeout(() => copyBtn.innerText = "COPY CODE", 2000);
         }
-
-        function resetForm() {
-            document.getElementById('title').value = '';
-            document.getElementById('link').value = '';
-            document.getElementById('edit-index').value = "-1";
-            document.getElementById('save-btn').innerText = "Save to List";
-        }
-
-        window.onload = init;
     </script>
 </body>
 </html>
