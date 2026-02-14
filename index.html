@@ -3,132 +3,110 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TeraBox Pro Downloader</title>
+    <title>TeraBox Ultra Downloader</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        body { background-color: #0f172a; color: white; scroll-behavior: smooth; }
-        .glass { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(15px); border: 1px solid rgba(255, 255, 255, 0.1); }
-        .gradient-text { background: linear-gradient(90deg, #3b82f6, #10b981); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        body { background: #0f172a; color: white; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        .glass { background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.1); }
+        .btn-gradient { background: linear-gradient(90deg, #3b82f6, #2563eb); transition: all 0.3s ease; }
+        .btn-gradient:hover { transform: translateY(-2px); box-shadow: 0 4px 15px rgba(37, 99, 235, 0.4); }
     </style>
 </head>
-<body class="min-h-screen flex flex-col items-center p-4 md:p-10">
+<body class="min-h-screen flex flex-col items-center justify-center p-6">
 
-    <div class="w-full max-w-3xl">
+    <div class="w-full max-w-2xl">
         <div class="text-center mb-10">
-            <h1 class="text-5xl font-black mb-3 gradient-text">TeraBox DL</h1>
-            <p class="text-gray-400 text-lg">ফাইল প্লে করুন এবং হাই-স্পিড ডাউনলোড করুন</p>
+            <h1 class="text-5xl font-black text-blue-500 mb-2 italic">TERA<span class="text-white">DL</span></h1>
+            <p class="text-gray-400">High Speed Video Player & Downloader</p>
         </div>
 
         <div class="glass p-8 rounded-3xl shadow-2xl mb-8">
-            <div class="flex flex-col gap-4">
+            <div class="space-y-4">
                 <div class="relative">
-                    <input type="text" id="teraUrl" placeholder="TeraBox লিঙ্কটি এখানে পেস্ট করুন..." 
-                        class="w-full bg-gray-900 border border-gray-700 p-5 pl-12 rounded-2xl focus:outline-none focus:border-blue-500 transition-all text-white text-lg shadow-inner">
+                    <input type="text" id="teraUrl" placeholder="Paste TeraBox link here..." 
+                        class="w-full bg-gray-900 border border-gray-700 p-4 pl-12 rounded-xl focus:outline-none focus:border-blue-500 transition-all">
                     <i class="fa-solid fa-link absolute left-4 top-1/2 -translate-y-1/2 text-gray-500"></i>
                 </div>
-                <button onclick="handleDownload()" id="actionBtn" 
-                    class="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600 py-5 rounded-2xl font-bold text-xl shadow-lg transform active:scale-95 transition-all flex items-center justify-center gap-3">
-                    <i class="fa-solid fa-magic"></i> ফাইলটি খুঁজুন
+                <button onclick="processLink()" id="mainBtn" 
+                    class="w-full btn-gradient py-4 rounded-xl font-bold text-lg flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-circle-play"></i> Get Video
                 </button>
             </div>
         </div>
 
-        <div id="loadingStatus" class="hidden text-center py-10">
-            <div class="inline-block animate-spin rounded-full h-14 w-14 border-t-4 border-b-4 border-blue-500 mb-4"></div>
-            <p class="text-blue-400 font-semibold text-lg">আপনার ডেটা প্রসেস হচ্ছে, অনুগ্রহ করে অপেক্ষা করুন...</p>
+        <div id="loader" class="hidden text-center py-6">
+            <div class="inline-block animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-blue-500 mb-4"></div>
+            <p class="text-blue-400 font-medium">Fetching your file from server...</p>
         </div>
 
-        <div id="outputArea" class="hidden glass rounded-3xl overflow-hidden p-6 animate-in fade-in duration-500 border border-blue-500/30">
-            <div class="flex items-center gap-3 mb-6">
-                <div class="bg-blue-500 p-3 rounded-xl">
-                    <i class="fa-solid fa-file-video text-2xl"></i>
-                </div>
-                <h2 id="fileName" class="text-xl font-bold text-gray-100 truncate"></h2>
+        <div id="resultCard" class="hidden glass rounded-3xl overflow-hidden p-6 border-l-4 border-blue-500 animate-in fade-in duration-500">
+            <div class="flex items-center gap-3 mb-4">
+                <i class="fa-solid fa-file-video text-blue-500 text-2xl"></i>
+                <h2 id="fileTitle" class="text-lg font-bold truncate text-gray-200"></h2>
             </div>
             
-            <div class="rounded-2xl overflow-hidden bg-black mb-8 aspect-video border border-gray-800 shadow-2xl">
-                <video id="videoPlayer" controls class="w-full h-full">
+            <div class="bg-black rounded-2xl overflow-hidden aspect-video mb-6 border border-gray-800">
+                <video id="videoPlayer" controls class="w-full h-full shadow-2xl">
                     <source id="videoSource" src="" type="video/mp4">
-                    আপনার ব্রাউজার ভিডিও প্লে সাপোর্ট করে না।
                 </video>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <a id="downloadLink" href="#" target="_blank" 
-                    class="bg-emerald-600 hover:bg-emerald-500 text-center py-5 rounded-2xl font-black text-lg shadow-lg transition-all flex items-center justify-center gap-2">
-                    <i class="fa-solid fa-download"></i> সরাসরি ডাউনলোড
-                </a>
-                <button onclick="copyToClipboard()" 
-                    class="bg-gray-800 hover:bg-gray-700 text-center py-5 rounded-2xl font-bold text-lg transition-all flex items-center justify-center gap-2">
-                    <i class="fa-solid fa-copy"></i> লিঙ্ক কপি করুন
-                </button>
-            </div>
+            <a id="downloadBtn" href="#" target="_blank" 
+                class="block w-full bg-green-600 hover:bg-green-700 text-center py-4 rounded-xl font-bold text-lg transition-all shadow-lg">
+                <i class="fa-solid fa-download mr-2"></i> Download Now
+            </a>
         </div>
     </div>
 
     <script>
-        async function handleDownload() {
-            const inputField = document.getElementById('teraUrl');
-            const loader = document.getElementById('loadingStatus');
-            const output = document.getElementById('outputArea');
-            const btn = document.getElementById('actionBtn');
+        async function processLink() {
+            const input = document.getElementById('teraUrl').value.trim();
+            const btn = document.getElementById('mainBtn');
+            const loader = document.getElementById('loader');
+            const result = document.getElementById('resultCard');
 
-            // আপনার নতুন API লিঙ্কটি এখানে আপডেট করা হয়েছে
-            const API_ENDPOINT = "https://gxterabox.samimtt9.workers.dev";
+            // আপনার নতুন API Worker লিঙ্ক
+            const API_URL = "https://gxterabox.samimtt9.workers.dev";
 
-            if (!inputField.value.trim()) {
-                alert("দয়া করে একটি বৈধ লিঙ্ক প্রদান করুন!");
+            if (!input) {
+                alert("Please paste a valid link!");
                 return;
             }
 
-            // UI আপডেট
+            // UI Reset
             loader.classList.remove('hidden');
-            output.classList.add('hidden');
+            result.classList.add('hidden');
             btn.disabled = true;
-            btn.style.opacity = "0.7";
+            btn.style.opacity = "0.6";
 
             try {
-                // API থেকে ডেটা ফেচ করা
-                const response = await fetch(`${API_ENDPOINT}/?url=${encodeURIComponent(inputField.value.trim())}`);
+                const response = await fetch(`${API_URL}/?url=${encodeURIComponent(input)}`);
                 const data = await response.json();
 
-                if (data && data.list && data.list.length > 0) {
-                    const fileInfo = data.list[0];
-                    const finalUrl = fileInfo.download_urls['fast'] || fileInfo.download_urls['standard'];
+                if (data.list && data.list.length > 0) {
+                    const fileData = data.list[0];
+                    const finalLink = fileData.download_urls['fast'] || fileData.download_urls['standard'];
 
-                    // ডেটা বসানো
-                    document.getElementById('fileName').innerText = fileInfo.filename;
-                    document.getElementById('videoSource').src = finalUrl;
-                    document.getElementById('downloadLink').href = finalUrl;
+                    document.getElementById('fileTitle').innerText = fileData.filename;
+                    document.getElementById('videoSource').src = finalLink;
+                    document.getElementById('downloadBtn').href = finalLink;
                     
-                    // প্লেয়ার লোড করা
-                    const player = document.getElementById('videoPlayer');
-                    player.load();
-
+                    document.getElementById('videoPlayer').load();
+                    
                     loader.classList.add('hidden');
-                    output.classList.remove('hidden');
-                    
-                    // রেজাল্ট সেকশনে স্ক্রোল করা
-                    output.scrollIntoView({ behavior: 'smooth' });
+                    result.classList.remove('hidden');
                 } else {
-                    alert("দুঃখিত! এই লিঙ্ক থেকে কোনো ফাইল পাওয়া যায়নি।");
+                    alert("No file found! Please check the link and try again.");
                     loader.classList.add('hidden');
                 }
-            } catch (error) {
-                console.error("Error:", error);
-                alert("সার্ভার এরর! আপনার Cloudflare Worker-এর কোডটি ঠিকমতো কাজ করছে না।");
+            } catch (err) {
+                alert("Server Connection Error! Make sure your Worker is deployed correctly.");
                 loader.classList.add('hidden');
             } finally {
                 btn.disabled = false;
                 btn.style.opacity = "1";
             }
-        }
-
-        function copyToClipboard() {
-            const link = document.getElementById('videoSource').src;
-            navigator.clipboard.writeText(link);
-            alert("ডাউনলোড লিঙ্কটি ক্লিপবোর্ডে কপি করা হয়েছে!");
         }
     </script>
 </body>
