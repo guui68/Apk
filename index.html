@@ -3,89 +3,63 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TeraBox Downloader - Direct Method</title>
+    <title>TeraBox Fast Downloader</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <style>
-        body { background: #0b0f1a; color: white; font-family: sans-serif; }
-        .card { background: #161b2a; border: 1px solid #2d3748; }
-    </style>
 </head>
-<body class="min-h-screen flex flex-col items-center p-6">
-
-    <div class="w-full max-w-xl mt-12">
-        <div class="text-center mb-10">
-            <h1 class="text-4xl font-extrabold text-blue-500 italic">TERA<span class="text-white">DL</span></h1>
-            <p class="text-gray-400 mt-2 font-medium">সরাসরি সার্ভার থেকে ভিডিও প্লে করুন</p>
+<body class="bg-gray-900 text-white flex flex-col items-center p-6">
+    <div class="w-full max-w-lg mt-10">
+        <h1 class="text-3xl font-bold text-center text-blue-500 mb-8">TeraBox DL</h1>
+        
+        <div class="bg-gray-800 p-6 rounded-xl shadow-lg">
+            <input type="text" id="tUrl" placeholder="Paste link here..." class="w-full p-4 rounded bg-gray-700 mb-4 focus:outline-none border border-gray-600">
+            <button onclick="getLink()" id="btn" class="w-full bg-blue-600 py-3 rounded font-bold hover:bg-blue-700">ফাইলটি দেখুন</button>
         </div>
 
-        <div class="card p-8 rounded-3xl shadow-2xl mb-8">
-            <div class="space-y-4">
-                <input type="text" id="teraLink" placeholder="TeraBox লিঙ্কটি এখানে দিন..." 
-                    class="w-full bg-gray-900 border border-gray-700 p-4 rounded-2xl focus:outline-none focus:border-blue-500 text-white">
-                <button onclick="getFastData()" id="mainBtn" 
-                    class="w-full bg-blue-600 hover:bg-blue-700 py-4 rounded-2xl font-bold text-lg transition-all flex items-center justify-center gap-2">
-                    <i class="fa-solid fa-bolt"></i> ভিডিওটি দেখুন
-                </button>
-            </div>
-        </div>
+        <div id="loader" class="hidden mt-6 text-center text-blue-400 animate-pulse">খোঁজা হচ্ছে...</div>
 
-        <div id="loader" class="hidden text-center py-6">
-            <div class="inline-block animate-spin rounded-full h-10 w-10 border-t-2 border-blue-500 mb-2"></div>
-            <p class="text-blue-400">খুঁজে পাওয়া যাচ্ছে, অপেক্ষা করুন...</p>
-        </div>
-
-        <div id="result" class="hidden card rounded-3xl overflow-hidden p-6 animate-pulse-once">
-            <h2 id="vName" class="text-lg font-bold mb-4 text-gray-200"></h2>
-            <div class="bg-black rounded-2xl overflow-hidden aspect-video mb-6 border border-gray-800">
-                <video id="vVideo" controls class="w-full h-full shadow-2xl"></video>
-            </div>
-            <a id="vDownload" href="#" target="_blank" 
-                class="block w-full bg-green-600 hover:bg-green-700 text-center py-4 rounded-2xl font-bold text-lg transition-all">
-                <i class="fa-solid fa-download mr-2"></i> ডাউনলোড করুন
-            </a>
+        <div id="result" class="hidden mt-8 p-4 bg-gray-800 rounded-xl border border-blue-500">
+            <p id="name" class="mb-4 font-semibold text-sm truncate"></p>
+            <video id="video" controls class="w-full rounded bg-black mb-4"></video>
+            <a id="dl" href="#" target="_blank" class="block w-full bg-green-600 text-center py-3 rounded font-bold">ডাউনলোড করুন</a>
         </div>
     </div>
 
     <script>
-        async function getFastData() {
-            const input = document.getElementById('teraLink').value.trim();
-            const btn = document.getElementById('mainBtn');
+        async function getLink() {
+            const link = document.getElementById('tUrl').value.trim();
+            const btn = document.getElementById('btn');
+            const resDiv = document.getElementById('result');
             const loader = document.getElementById('loader');
-            const result = document.getElementById('result');
 
-            if (!input) return alert("দয়া করে লিঙ্ক দিন!");
+            if(!link) return alert("লিঙ্ক দিন!");
 
-            // UI Reset
-            loader.classList.remove('hidden');
-            result.classList.add('hidden');
             btn.disabled = true;
+            loader.classList.remove('hidden');
+            resDiv.classList.add('hidden');
 
             try {
-                // আমরা সরাসরি একটি সচল ওপেন এপিআই ব্যবহার করছি
-                const res = await fetch(`https://terabox-dl.qtcloud.workers.dev/api/get-info?url=${encodeURIComponent(input)}`);
-                const data = await res.json();
+                // আমরা এখানে সবথেকে সচল একটি পাবলিক এপিআই ব্যবহার করছি
+                const response = await fetch(`https://terabox-dl.qtcloud.workers.dev/api/get-info?url=${encodeURIComponent(link)}`);
+                const data = await response.json();
 
-                if (data && data.list && data.list.length > 0) {
+                if(data && data.list && data.list.length > 0) {
                     const file = data.list[0];
-                    const dl = file.download_urls['fast'] || file.download_urls['standard'];
+                    const finalUrl = file.download_urls['fast'] || file.download_urls['standard'];
 
-                    document.getElementById('vName').innerText = file.filename;
-                    document.getElementById('vVideo').src = dl;
-                    document.getElementById('vDownload').href = dl;
+                    document.getElementById('name').innerText = file.filename;
+                    document.getElementById('video').src = finalUrl;
+                    document.getElementById('dl').href = finalUrl;
                     
-                    document.getElementById('vVideo').load();
                     loader.classList.add('hidden');
-                    result.classList.remove('hidden');
+                    resDiv.classList.remove('hidden');
                 } else {
-                    alert("দুঃখিত, এই লিঙ্ক থেকে ডাটা পাওয়া যায়নি। অন্য লিঙ্ক ট্রাই করুন।");
-                    loader.classList.add('hidden');
+                    alert("লিঙ্কটি থেকে ভিডিও পাওয়া যায়নি। অন্য লিঙ্ক দিন।");
                 }
-            } catch (err) {
-                alert("সার্ভার ব্যস্ত! দয়া করে কিছুক্ষণ পর আবার চেষ্টা করুন।");
-                loader.classList.add('hidden');
+            } catch (e) {
+                alert("সার্ভার সমস্যা! ১ মিনিট পর আবার ট্রাই করুন।");
             } finally {
                 btn.disabled = false;
+                loader.classList.add('hidden');
             }
         }
     </script>
