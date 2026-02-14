@@ -1,83 +1,99 @@
 <!DOCTYPE html>
-<html lang="bn">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GX Technology - Download App</title>
+    <title>TeraBox Pro Downloader</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            margin: 0;
-            padding: 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            background: linear-gradient(135deg, #1e1e2f, #2d2d44);
-            color: white;
-            text-align: center;
-        }
-        .card {
-            background: #ffffff;
-            color: #333;
-            padding: 40px 20px;
-            border-radius: 20px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-            max-width: 350px;
-            width: 90%;
-        }
-        .app-icon {
-            width: 80px;
-            height: 80px;
-            background: #2ea44f;
-            border-radius: 18px;
-            margin: 0 auto 20px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            color: white;
-            font-size: 40px;
-            font-weight: bold;
-        }
-        h1 { margin: 10px 0; font-size: 24px; }
-        p { color: #666; margin-bottom: 30px; }
-        .download-btn {
-            background-color: #2ea44f;
-            color: white;
-            padding: 15px 25px;
-            text-decoration: none;
-            font-size: 18px;
-            border-radius: 50px;
-            display: inline-block;
-            transition: 0.3s;
-            font-weight: bold;
-        }
-        .download-btn:hover {
-            background-color: #288c44;
-            transform: scale(1.05);
-        }
-        .info {
-            margin-top: 20px;
-            font-size: 12px;
-            color: #999;
-        }
+        body { background-color: #0f172a; color: white; }
+        .glass { background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.1); }
     </style>
 </head>
-<body>
+<body class="min-h-screen flex items-center justify-center p-4">
 
-    <div class="card">
-        <div class="app-icon">GX</div>
-        <h1>GX Technology</h1>
-        <p>আপনার প্রয়োজনীয় সব সমাধান এখন এক অ্যাপে।</p>
-        
-        <a href="আপনার_কপি_করা_লিংক_এখানে" class="download-btn">
-            Download APK (31.7 MB)
-        </a>
+    <div class="w-full max-w-2xl">
+        <div class="text-center mb-8">
+            <h1 class="text-4xl font-black text-blue-500 mb-2">TeraBox <span class="text-white">DL</span></h1>
+            <p class="text-gray-400">আপনার ভিডিও প্লে করুন এবং সরাসরি ডাউনলোড করুন</p>
+        </div>
 
-        <div class="info">
-            Version: 1.0.0 | Requirements: Android 5.0+
+        <div class="glass p-6 rounded-2xl shadow-2xl mb-6">
+            <div class="flex flex-col gap-4">
+                <input type="text" id="teraUrl" placeholder="TeraBox লিঙ্কটি এখানে পেস্ট করুন..." 
+                    class="w-full bg-gray-900 border border-gray-700 p-4 rounded-xl focus:outline-none focus:border-blue-500 transition-all text-white">
+                <button onclick="startProcessing()" id="mainBtn" 
+                    class="w-full bg-blue-600 hover:bg-blue-700 py-4 rounded-xl font-bold text-lg transition-all flex items-center justify-center">
+                    <i class="fa-solid fa-cloud-arrow-down mr-2"></i> Get Video
+                </button>
+            </div>
+        </div>
+
+        <div id="loader" class="hidden text-center py-6">
+            <div class="inline-block animate-spin rounded-full h-10 w-10 border-t-2 border-blue-500 mb-2"></div>
+            <p class="text-blue-400">সার্ভার থেকে ফাইল খোঁজা হচ্ছে...</p>
+        </div>
+
+        <div id="resultArea" class="hidden glass rounded-2xl overflow-hidden animate-fade-in">
+            <div class="p-6">
+                <h2 id="vTitle" class="text-lg font-bold mb-4 text-gray-200"></h2>
+                
+                <div class="rounded-xl overflow-hidden bg-black mb-6 border border-gray-700">
+                    <video id="vPlayer" controls class="w-full h-full">
+                        <source id="vSource" src="" type="video/mp4">
+                    </video>
+                </div>
+
+                <a id="dlBtn" href="#" target="_blank" 
+                    class="block w-full bg-green-600 hover:bg-green-700 text-center py-4 rounded-xl font-bold text-lg transition-all">
+                    <i class="fa-solid fa-download mr-2"></i> Direct Download
+                </a>
+            </div>
         </div>
     </div>
 
+    <script>
+        async function startProcessing() {
+            const urlValue = document.getElementById('teraUrl').value;
+            const loader = document.getElementById('loader');
+            const resultArea = document.getElementById('resultArea');
+            const btn = document.getElementById('mainBtn');
+
+            // আপনার তৈরি করা Cloudflare Worker API লিঙ্ক
+            const API_URL = "https://tdownloadererabox.sammimalex.workers.dev";
+
+            if(!urlValue) return alert("লিঙ্ক দিন!");
+
+            // UI Reset
+            loader.classList.remove('hidden');
+            resultArea.classList.add('hidden');
+            btn.disabled = true;
+
+            try {
+                const response = await fetch(`${API_URL}?url=${encodeURIComponent(urlValue)}`);
+                const data = await response.json();
+
+                if(data.list && data.list.length > 0) {
+                    const file = data.list[0];
+                    const finalLink = file.download_urls['fast'] || file.download_urls['standard'];
+
+                    document.getElementById('vTitle').innerText = file.filename;
+                    document.getElementById('vSource').src = finalLink;
+                    document.getElementById('dlBtn').href = finalLink;
+                    
+                    document.getElementById('vPlayer').load();
+                    resultArea.classList.remove('hidden');
+                } else {
+                    alert("কোনো ফাইল পাওয়া যায়নি। লিঙ্কটি ঠিক আছে কি না দেখুন।");
+                }
+            } catch (err) {
+                alert("সার্ভারে এরর হয়েছে। আপনার Worker কোডটি আবার চেক করুন।");
+            } finally {
+                loader.classList.add('hidden');
+                btn.disabled = false;
+            }
+        }
+    </script>
 </body>
 </html>
